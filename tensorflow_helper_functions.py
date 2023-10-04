@@ -1,10 +1,11 @@
 """
 Python module that contains tensorflow helper functions
 """
-import matplotlib.pyplot as plt
-import numpy as np
-from sklearn.metrics import confusion_matrix
+import os
 import itertools
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.metrics import confusion_matrix
 
 
 def plot_predictions(train_data, train_labels, test_data, test_labels, predictions):
@@ -123,3 +124,13 @@ def plot_confusion_matrix(y_true, y_pred, classes=None, figsize=(10, 10), text_s
                  horizontalalignment="center",
                  color="white" if cm[i, j] > threshold else "black",
                  size=text_size)
+
+
+def check_images_folder(folder_path):
+    """
+    print out the number of subdirectories and filenames of a folder
+    :param folder_path: path of the folder in string format
+    :return: nothing
+    """
+    for dirpath, dirnames, filenames in os.walk(folder_path):
+        print(f"There are {len(dirnames)} directories and {len(filenames)} files in '{dirpath}'.")
