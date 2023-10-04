@@ -57,11 +57,9 @@ def plot_decision_boundary(model, X, y):
     plt.ylim(yy.min(), yy.max())
 
 
-def plot_confusion_matrix(y_test, y_preds, classes=None):
-    figsize = (10, 10)
-
+def plot_confusion_matrix(y_true, y_pred, classes=None, figsize=(10, 10), text_size=15 ):
     # Create the confusion matrix
-    cm = confusion_matrix(y_test, y_preds)
+    cm = confusion_matrix(y_true, y_pred)
     cm_norm = cm.astype("float") / cm.sum(axis=1)[:, np.newaxis]  # normalize it
     n_classes = cm.shape[0]
 
@@ -90,9 +88,9 @@ def plot_confusion_matrix(y_test, y_preds, classes=None):
     ax.xaxis.tick_bottom()
 
     # Adjust label size
-    ax.xaxis.label.set_size(20)
-    ax.yaxis.label.set_size(20)
-    ax.title.set_size(20)
+    ax.xaxis.label.set_size(text_size)
+    ax.yaxis.label.set_size(text_size)
+    ax.title.set_size(text_size + 5)
 
     # Set threshold for different colors
     threshold = (cm.max() + cm.min()) / 2.
@@ -102,4 +100,4 @@ def plot_confusion_matrix(y_test, y_preds, classes=None):
         plt.text(j, i, f"{cm[i, j]} ({cm_norm[i, j] * 100:.1f}%)",
                  horizontalalignment="center",
                  color="white" if cm[i, j] > threshold else "black",
-                 size=15)
+                 size=text_size)
