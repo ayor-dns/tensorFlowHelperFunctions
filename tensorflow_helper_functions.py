@@ -3,6 +3,8 @@ Python module that contains tensorflow helper functions
 """
 import matplotlib.pyplot as plt
 import numpy as np
+from sklearn.metrics import confusion_matrix
+import itertools
 
 
 def plot_predictions(train_data, train_labels, test_data, test_labels, predictions):
@@ -53,3 +55,51 @@ def plot_decision_boundary(model, X, y):
     plt.scatter(X[:, 0], X[:, 1], c=y, s=40, cmap=plt.cm.RdYlBu)
     plt.xlim(xx.min(), xx.max())
     plt.ylim(yy.min(), yy.max())
+
+
+def plot_confusion_matrix(y_test, y_preds, classes):
+    figsize = (10, 10)
+
+    # Create the confusion matrix
+    cm = confusion_matrix(y_test, y_preds)
+    cm_norm = cm.astype("float") / cm.sum(axis=1)[:, np.newaxis]  # normalize it
+    n_classes = cm.shape[0]
+
+    # Let's prettify it
+    fig, ax = plt.subplots(figsize=figsize)
+    # Create a matrix plot
+    cax = ax.matshow(cm, cmap=plt.cm.Blues)  # https://matplotlib.org/3.2.0/api/_as_gen/matplotlib.axes.Axes.matshow.html
+    fig.colorbar(cax)
+
+    if classes:
+        labels = classes
+    else:
+        labels = np.arange(cm.shape[0])
+
+    # Label the axes
+    ax.set(title="Confusion Matrix",
+           xlabel="Predicted label",
+           ylabel="True label",
+           xticks=np.arange(n_classes),
+           yticks=np.arange(n_classes),
+           xticklabels=labels,
+           yticklabels=labels)
+
+    # Set x-axis labels to bottom
+    ax.xaxis.set_label_position("bottom")
+    ax.xaxis.tick_bottom()
+
+    # Adjust label size
+    ax.xaxis.label.set_size(20)
+    ax.yaxis.label.set_size(20)
+    ax.title.set_size(20)
+
+    # Set threshold for different colors
+    threshold = (cm.max() + cm.min()) / 2.
+
+    # Plot the text on each cell
+    for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
+        plt.text(j, i, f"{cm[i, j]} ({cm_norm[i, j] * 100:.1f}%)",
+                 horizontalalignment="center",
+                 color="white" if cm[i, j] > threshold else "black",
+                 size=15)
