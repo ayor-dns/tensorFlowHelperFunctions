@@ -57,7 +57,7 @@ def plot_decision_boundary(model, X, y):
     plt.ylim(yy.min(), yy.max())
 
 
-def plot_confusion_matrix(y_test, y_preds, classes):
+def plot_confusion_matrix(y_test, y_preds, classes=None):
     figsize = (10, 10)
 
     # Create the confusion matrix
