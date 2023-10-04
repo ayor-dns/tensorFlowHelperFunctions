@@ -133,4 +133,10 @@ def check_images_folder(folder_path):
     :return: nothing
     """
     for dirpath, dirnames, filenames in os.walk(folder_path):
-        print(f"There are {len(dirnames)} directories and {len(filenames)} files in '{dirpath}'.")
+        if len(filenames) > 0:
+            ext_set = {os.path.splitext(file)[-1] for file in filenames}
+            ext_string = f" {ext_set}"
+        else:
+            ext_string = ""
+
+        print(f"There are {len(dirnames)} directories and {len(filenames)}{ext_string} files in '{dirpath}'.")
