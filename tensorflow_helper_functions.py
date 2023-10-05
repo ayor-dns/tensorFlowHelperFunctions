@@ -139,7 +139,7 @@ def check_images_folder(folder_path):
         else:
             ext_string = ""
 
-        print(f"There are {len(dirnames)} directories and {len(filenames)}{ext_string} files in '{dirpath}'.")
+        print(f"There are {len(dirnames)} directories and {len(filenames)} files{ext_string} in '{dirpath}'.")
 
 
 def plot_loss_and_metrics_curves(history_dict, metrics=None):
