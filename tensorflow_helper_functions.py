@@ -144,45 +144,53 @@ def check_images_folder(folder_path):
         print(f"There are {len(dirnames)} directories and {len(filenames)} files{ext_string} in '{dirpath}'.")
 
 
-def plot_loss_and_metrics_curves(history_dict, metrics=None):
+def plot_loss_and_metrics_curves(histories, metrics=None):
     """
-    Plot loss curves and metrics curves in separate graph
-    :param history_dict: dictionary containing loss and metrics keys & data
+    Plot loss curves and metrics curves of histories in separate graph
+    :param histories: a single history object or list of histories of a model fit with keras
     :param metrics: a string of a single metrics or list of multiple metrics to plot
     :return: nothing
     """
-    epochs = range(len(history_dict.get("loss")))
-
-    loss = history_dict.get("loss")
-    val_loss = history_dict.get("val_loss")
+    # args checks
+    if not isinstance(histories, list):
+        histories = [histories]
+    if isinstance(metrics, str):
+        metrics = [metrics]
 
     # plot loss
     plt.figure()
-    plt.plot(epochs, loss, label="training_loss")
-    if val_loss:
-        plt.plot(epochs, val_loss, label="validation_loss")
+    for history in histories:
+        model_name = history.model.name
+        epochs = range(history.epoch[0], history.epoch[-1] + 1)
+        loss = history.history.get("loss")
+        val_loss = history.history.get("val_loss")
+
+        plt.plot(epochs, loss, label=f"{model_name}_training_loss")
+        if val_loss:
+            plt.plot(epochs, val_loss, label=f"{model_name}_validation_loss")
+
     plt.title("loss")
     plt.xlabel("epochs")
     plt.legend()
 
     # plot metrics
-    if isinstance(metrics, str):
-        metrics = [metrics]
-
     if isinstance(metrics, list):
         for metric in metrics:
-            metric_values = history_dict.get(metric)
-            metric_validation_values = history_dict.get(f"val_{metric}")
+            plt.figure()
+            for history in histories:
+                model_name = history.model.name
+                epochs = range(history.epoch[0], history.epoch[-1] + 1)
+                metric_values = history.history.get(metric)
+                metric_validation_values = history.history.get(f"val_{metric}")
 
-            if metric_values or metric_validation_values:
-                plt.figure()
-                if metric_values:
-                    plt.plot(epochs, metric_values, label=metric)
-                if metric_validation_values:
-                    plt.plot(epochs, metric_validation_values, label=f"val_{metric}")
-                plt.title(metric)
-                plt.xlabel("epochs")
-                plt.legend()
+                if metric_values or metric_validation_values:
+                    if metric_values:
+                        plt.plot(epochs, metric_values, label=f"{model_name}_{metric}")
+                    if metric_validation_values:
+                        plt.plot(epochs, metric_validation_values, label=f"{model_name}_val_{metric}")
+            plt.title(metric)
+            plt.xlabel("epochs")
+            plt.legend()
 
 
 def create_tensorboard_callback(dir_name, experiment_name):
