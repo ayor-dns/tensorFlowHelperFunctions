@@ -201,13 +201,14 @@ def create_tensorboard_callback(dir_name, experiment_name):
     return tensorboard_callback
 
 
-def load_and_prep_images(filenames, img_shape, channels=3, scale=True):
+def load_and_prep_images(filenames, img_shape, channels=3, scale=True, return_batch=True):
     """
     Read one or more images from filenames, turns them into a tensor, reshape to specified format and rescale if needed
     :param filenames: str or list of path to target images
     :param img_shape: int or tuple height/width dimension of target image size
     :param channels: int number of color channel of the original image
     :param scale: if True, scale pixel from 0-255 to 0-1
+    :param return_batch: if True, return the processed images as a batch list of tensors
     :return: if single path provided, return the image tensor of shape (img_shape, img_shape), otherwise return a list of
     image tensors of shape (img_shape, img_shape)
     """
@@ -224,6 +225,9 @@ def load_and_prep_images(filenames, img_shape, channels=3, scale=True):
         if scale:
             img = img/255.0
         images.append(img)
+
+    if return_batch:
+        return tf.stack([*images])
 
     if len(images) == 1:
         return images[0]
