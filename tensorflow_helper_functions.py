@@ -232,3 +232,63 @@ def load_and_prep_images(filenames, img_shape, channels=3, scale=True, return_ba
     if len(images) == 1:
         return images[0]
     return images
+
+
+def pred_and_plot(model, image_tensors, class_names, true_labels=None, limit_bar=-1):
+    """
+    Make prediction with model on image_tensors and plot results and prediction probabilities
+    :param model: a tensorflow model with predict method
+    :param image_tensors: a single unbatched image tensor or a batch of image tensors
+    :param class_names: class names corresponding to numbers predicted by the model
+    :param true_labels: either list of numbers corresponding to true class number or list of string corresponding to class names
+    :param limit_bar: (int) top k number of prediction to plot. plot all preds if negative or null
+    :return: Nothing
+    """
+    if image_tensors.ndim == 3:
+        # missing batch dimension
+        image_tensors = tf.expand_dims(image_tensors, axis=0)
+
+    if true_labels is not None and len(image_tensors) != len(true_labels):
+        true_labels = None
+
+    # convert true_labels to class_names labels if need
+    if true_labels is not None and isinstance(true_labels[0], int):
+        true_labels = [class_names[true_label] for true_label in true_labels]
+
+    y_preds = model.predict(image_tensors, verbose=0)
+    pred_classes = tf.argmax(y_preds, axis=1).numpy()
+    pred_probs = tf.math.reduce_max(y_preds, axis=1).numpy()
+
+    for i, image in enumerate(image_tensors):
+        # plot image
+        plt.figure(figsize=(15, 7))
+        plt.subplot(1, 2, 1)
+        plt.axis(False)
+        plt.imshow(image/255.0)
+        # check for true labels
+        color = "black"
+        label = f"Predicted class: {class_names[pred_classes[i]]} ({round(pred_probs[i]*100,2)}%)"
+        if true_labels:
+            if true_labels[i] == class_names[pred_classes[i]]:
+                # correct prediction
+                color = "green"
+            else:
+                color = "red"
+                label += f" Correct class: {true_labels[i]}"
+
+        plt.title(label=label, color=color)
+
+        # plot bar graph of probabilities
+        plt.subplot(1, 2, 2)
+        if limit_bar > 0:
+            result = tf.math.top_k(y_preds[i], k=limit_bar)
+            values = result.values.numpy()
+            indices = result.indices.numpy()
+            class_names_plot = [class_names[indice] for indice in indices]
+
+        else:
+            values = y_preds[i]
+            class_names_plot = class_names
+
+        plt.bar(height=values, x=class_names_plot)
+        plt.xticks(rotation=70)
