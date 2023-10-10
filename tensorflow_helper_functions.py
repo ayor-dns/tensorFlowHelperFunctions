@@ -201,23 +201,30 @@ def create_tensorboard_callback(dir_name, experiment_name):
     return tensorboard_callback
 
 
-def load_and_prep_image(filename, img_shape, channels=3, scale=True):
+def load_and_prep_images(filenames, img_shape, channels=3, scale=True):
     """
-    Read an image from filename, turns it into a tensor, reshape to specified format and rescale if needed
-    :param filename: str path to target image
+    Read one or more images from filenames, turns them into a tensor, reshape to specified format and rescale if needed
+    :param filenames: str or list of path to target images
     :param img_shape: int or tuple height/width dimension of target image size
     :param channels: int number of color channel of the original image
     :param scale: if True, scale pixel from 0-255 to 0-1
-    :return: image tensor of shape (img_shape, img_shape)
+    :return: if single path provided, return the image tensor of shape (img_shape, img_shape), otherwise return a list of
+    image tensors of shape (img_shape, img_shape)
     """
     if isinstance(img_shape, int):
         img_shape = [img_shape, img_shape]
+    if isinstance(filenames, str):
+        filenames = [filenames]
 
-    img = tf.io.read_file(filename)
-    img = tf.io.decode_image(img, channels=channels)
-    img = tf.image.resize(img, img_shape)
+    images = []
+    for filename in filenames:
+        img = tf.io.read_file(filename)
+        img = tf.io.decode_image(img, channels=channels)
+        img = tf.image.resize(img, img_shape)
+        if scale:
+            img = img/255.0
+        images.append(img)
 
-    if scale:
-        return img/255.0
-    else:
-        return img
+    if len(images) == 1:
+        return images[0]
+    return images
