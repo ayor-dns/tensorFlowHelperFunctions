@@ -199,3 +199,25 @@ def create_tensorboard_callback(dir_name, experiment_name):
     tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir)
     print(f"Saving Tensorboard log files to {log_dir}")
     return tensorboard_callback
+
+
+def load_and_prep_image(filename, img_shape, channels=3, scale=True):
+    """
+    Read an image from filename, turns it into a tensor, reshape to specified format and rescale if needed
+    :param filename: str path to target image
+    :param img_shape: int or tuple height/width dimension of target image size
+    :param channels: int number of color channel of the original image
+    :param scale: if True, scale pixel from 0-255 to 0-1
+    :return: image tensor of shape (img_shape, img_shape)
+    """
+    if isinstance(img_shape, int):
+        img_shape = [img_shape, img_shape]
+
+    img = tf.io.read_file(filename)
+    img = tf.io.decode_image(img, channels=channels)
+    img = tf.image.resize(img, img_shape)
+
+    if scale:
+        return img/255.0
+    else:
+        return img
