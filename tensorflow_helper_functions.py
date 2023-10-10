@@ -281,14 +281,17 @@ def pred_and_plot(model, image_tensors, class_names, true_labels=None, limit_bar
         # plot bar graph of probabilities
         plt.subplot(1, 2, 2)
         if limit_bar > 0:
+            label = f"Top {limit_bar} prediction probabilites"
             result = tf.math.top_k(y_preds[i], k=limit_bar)
             values = result.values.numpy()
             indices = result.indices.numpy()
             class_names_plot = [class_names[indice] for indice in indices]
 
         else:
+            label = "Prediction probabilites"
             values = y_preds[i]
             class_names_plot = class_names
 
         plt.bar(height=values, x=class_names_plot)
+        plt.title(label=label)
         plt.xticks(rotation=70)
