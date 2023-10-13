@@ -6,7 +6,7 @@ import os
 import itertools
 import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, accuracy_score, precision_recall_fscore_support
 import tensorflow as tf
 
 
@@ -126,6 +126,21 @@ def plot_confusion_matrix(y_true, y_pred, classes=None, figsize=(10, 10), text_s
                  horizontalalignment="center",
                  color="white" if cm[i, j] > threshold else "black",
                  size=text_size)
+
+
+def evaluate_classes_prediction(y_true, y_pred):
+    """
+    Calculate accuracy, precision, f1 score and recall between ground truth and predicted label and return values as a dictionary
+    :param y_true: 1D Array of truth labels
+    :param y_pred: 1D Array of predicted labels
+    :return: a dictionary of accuracy, precision, recall, f1-score.
+    """
+    model_accuracy = accuracy_score(y_true, y_pred) * 100
+    model_precision, model_recall, model_f1, _ = precision_recall_fscore_support(y_true, y_pred, average="weighted")
+    return {"accuracy": model_accuracy,
+            "precision": model_precision * 100,
+            "recall": model_recall * 100,
+            "f1": model_f1 * 100}
 
 
 def check_images_folder(folder_path):
