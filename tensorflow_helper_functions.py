@@ -143,20 +143,24 @@ def evaluate_classes_prediction(y_true, y_pred):
             "f1": model_f1 * 100}
 
 
-def check_images_folder(folder_path):
+def check_content_from_folder(folder_path, ignore_dot_folder=True):
     """
     print out the number of subdirectories and filenames of a folder
     :param folder_path: path of the folder in string format
+    :param ignore_dot_folder: ignore folder that starts with a dot (like .git)
     :return: nothing
     """
-    for dirpath, dirnames, filenames in os.walk(folder_path):
+    for dir_path, dir_names, filenames in os.walk(folder_path):
+        if ignore_dot_folder and str(dir_names).startswith("."):
+            continue
+
         if len(filenames) > 0:
             ext_set = {os.path.splitext(file)[-1] for file in filenames}
             ext_string = f" {ext_set}"
         else:
             ext_string = ""
 
-        print(f"There are {len(dirnames)} directories and {len(filenames)} files{ext_string} in '{dirpath}'.")
+        print(f"There are {len(dir_names)} directories and {len(filenames)} files{ext_string} in '{dir_path}'.")
 
 
 def plot_loss_and_metrics_curves(histories, metrics=None):
