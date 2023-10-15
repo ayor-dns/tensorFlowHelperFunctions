@@ -151,7 +151,7 @@ def check_content_folder(folder_path, ignore_dot_folder=True):
     :return: nothing
     """
     for dir_path, dir_names, filenames in os.walk(folder_path):
-        if ignore_dot_folder and str(dir_names).startswith("."):
+        if ignore_dot_folder and any([folder_name.startswith(".") for folder_name in str(dir_path).split(os.sep)]):
             continue
 
         if len(filenames) > 0:
