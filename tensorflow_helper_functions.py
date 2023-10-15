@@ -143,7 +143,7 @@ def evaluate_classes_prediction(y_true, y_pred):
             "f1": model_f1 * 100}
 
 
-def check_content_from_folder(folder_path, ignore_dot_folder=True):
+def check_content_folder(folder_path, ignore_dot_folder=True):
     """
     print out the number of subdirectories and filenames of a folder
     :param folder_path: path of the folder in string format
