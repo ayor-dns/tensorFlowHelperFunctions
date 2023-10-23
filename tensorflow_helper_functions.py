@@ -314,3 +314,55 @@ def pred_and_plot(model, image_tensors, class_names, true_labels=None, limit_bar
         plt.bar(height=values, x=class_names_plot)
         plt.title(label=label)
         plt.xticks(rotation=70)
+
+
+def plot_model_feature_maps(model, img, layer_class_to_plot=("Conv2D", "MaxPooling2D"), cmap="viridis", scale_factor=20):
+    """
+    Plot the results of an image passed througt each layer of a model
+    :param model: a keras model
+    :param img: an img processed with load_and_prep_images
+    :param layer_class_to_plot: layer class to plot. Support Conv2D and MaxPooling2D for now
+    :param cmap: color map from matplotlib
+    :param scale_factor: factor to adjut the plot size
+    :return: Nothing
+
+    improve : - add heatmaps of activations : https://glassboxmedicine.com/2019/06/11/cnn-heat-maps-class-activation-mapping-cam/
+              - support other layer class
+    """
+
+    successive_outputs = [layer.output for layer in model.layers]
+    visualization_model = tf.keras.models.Model(inputs=model.input, outputs=successive_outputs)
+    successive_feature_maps = visualization_model.predict(img, verbose=0)
+
+    layer_names = [layer.name for layer in model.layers]
+    layer_classes = [layer.__class__.__name__ for layer in model.layers]
+    layer_shapes = [f"IN: {layer.input_shape[1:]} -> OUT:{layer.output_shape[1:]}" for layer in model.layers]
+
+    for layer_name, layer_class, layer_shape, feature_map in zip(layer_names, layer_classes, layer_shapes,
+                                                                 successive_feature_maps):
+        if layer_class in layer_class_to_plot:
+            n_features = feature_map.shape[-1]  # number of features in feature map
+
+            # The feature map has shape (1, size, size, n_features)
+            size = feature_map.shape[1]
+
+            # Tile the images in this matrix
+            display_grid = np.zeros((size, size * n_features))
+            for i in range(n_features):
+                x = feature_map[0, :, :, i]
+                x -= x.mean()
+                if x.std() != 0:
+                    x /= x.std()
+                x *= 64
+                x += 128
+                x = np.clip(x, 0, 255).astype('uint8')
+
+                # Tile each filter into this big horizontal grid
+                display_grid[:, i * size: (i + 1) * size] = x
+
+            # Display the grid
+            scale = scale_factor / n_features
+            plt.figure(figsize=(scale * n_features, scale))
+            plt.title(f"{layer_name} | {layer_shape}")
+            plt.grid(False)
+            plt.imshow(display_grid, aspect='auto', cmap=cmap)
