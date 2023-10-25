@@ -366,3 +366,74 @@ def plot_model_feature_maps(model, img, layer_class_to_plot=("Conv2D", "MaxPooli
             plt.title(f"{layer_name} | {layer_shape}")
             plt.grid(False)
             plt.imshow(display_grid, aspect='auto', cmap=cmap)
+
+
+def plot_time_series(values, timesteps=None, series_label=None, y_label=None, start=0, end=-1, plot_styles="-", figsize=(10, 7)):
+    """
+    Plot values against timesteps.
+    :param values: numpy array of values across time
+    :param timesteps: numpy array of timesteps. If None, plot values end to end. If not enough timesteps for series, reuse the first one and truncated values or timesteps as needed
+    :param series_label: labels corresponding to values for legend
+    :param y_label: label for y-axis
+    :param start: where to start the plot (setting a value will index from start of total x-axis)
+    :param end: where to end the plot (setting a value will index from end of total x-axis)
+    :param plot_styles: style of plot, default "-" (line)
+    :param figsize: figsize for the plot
+    :return: Nothing
+    """
+    plt.figure(figsize=figsize)
+
+    if not isinstance(values, list):
+        values = [values]
+
+    if timesteps is None:
+        timesteps = []
+        last_index = 0
+        for value in values:
+            time = list(range(last_index, len(value) + last_index))
+            timesteps.append(time)
+            last_index = time[-1]
+    if not isinstance(timesteps, list):
+        # single timesteps provided
+        timesteps = [timesteps]
+
+    if len(timesteps) != len(values):
+        # use first timesteps for every values
+        timesteps = [timesteps[0]] * len(values)
+
+    if series_label is None:
+        # no label provided
+        series_label = [None] * len(values)
+    if not isinstance(series_label, list):
+        # one label provided
+        series_label = [series_label]
+    if len(values) > len(series_label):
+        # not enough label provided
+        print(f"WARNING: Not enough labels for {len(values)} series. Only {len(series_label)} labels provided.")
+        new_label = [f"label_{i}" for i in range(0, len(values)-len(series_label))]
+        series_label.extend(new_label)
+
+    for time, series, label in zip(timesteps, values, series_label):
+        if len(time) > len(series):
+            print(f"WARNING: number of timesteps ({len(time)}) > number of values ({len(series)}). Timesteps will be shortened to match values.")
+            time = time[:len(series)]
+        elif len(time) < len(series):
+            print(f"WARNING: number of timesteps ({len(time)}) < number of values ({len(series)}). Values will be shortened to match timesteps.")
+            series = series[:len(time)]
+
+        plt.plot(time, series, plot_styles, label=label)
+
+    plt.xlabel("Time")
+    if y_label:
+        plt.ylabel(y_label)
+    plt.grid(True)
+    if series_label:
+        plt.legend(fontsize=14)
+    if start != 0 or end != -1:
+        common_axis = set()
+        for timestep in timesteps:
+            common_axis.update(timestep)
+        common_axis = list(sorted(common_axis))
+
+        plt.xlim(common_axis[start], common_axis[end])
+
