@@ -437,3 +437,29 @@ def plot_time_series(values, timesteps=None, series_label=None, y_label=None, st
 
         plt.xlim(common_axis[start], common_axis[end])
 
+
+def make_windows(x, window_size, horizon=1):
+    """
+    Turns a 1D array into a 2D array of sequential windows of window_size and return it with corresponding labels of size horizon
+    """
+    # 1. Create a window of specific window_size (add the horizon on the end for later labelling)
+    window_step = np.expand_dims(np.arange(window_size+horizon), axis=0)
+    # 2. Create a 2D array of multiple window steps (minus 1 to account for 0 indexing)
+    window_indexes = window_step + np.expand_dims(np.arange(len(x)-(window_size+horizon-1)), axis=0).T
+    # 3. Index on the target array (time series) with 2D array of multiple window steps
+    windowed_array = x[window_indexes]
+    # 4. Get the labelled windows
+    windows, labels = windowed_array[:, :-horizon], windowed_array[:, -horizon:]
+    return windows, labels
+
+
+def train_test_time_splits(windows, labels, test_split=0.2):
+    """
+    Splits matching pairs of windows and labels into train and test splits.
+    """
+    split_size = int(len(windows) * (1-test_split))
+    train_windows = windows[:split_size, :]
+    train_labels = labels[:split_size, :]
+    test_windows = windows[split_size:, :]
+    test_labels = labels[split_size:, :]
+    return train_windows, test_windows, train_labels, test_labels
