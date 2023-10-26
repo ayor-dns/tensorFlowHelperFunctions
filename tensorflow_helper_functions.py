@@ -186,6 +186,7 @@ def plot_loss_and_metrics_curves(histories, metrics=None):
 
         plt.plot(epochs, loss, label=f"{model_name}_training_loss")
         if val_loss:
+            # check if len(epochs) = len(val_loss) ?
             plt.plot(epochs, val_loss, label=f"{model_name}_validation_loss")
 
     plt.title("loss")
@@ -463,3 +464,53 @@ def train_test_time_splits(windows, labels, test_split=0.2):
     test_windows = windows[split_size:, :]
     test_labels = labels[split_size:, :]
     return train_windows, test_windows, train_labels, test_labels
+
+
+def make_windowed_datasets(series, window_size,  horizon=1, batch_size=32, test_split=0.2, shuffle_buffer=-1):
+    """
+    Generates train & test datasets of windows & labels
+
+    Args:
+      series (array of float) - contains the values of the time series
+      window_size (int) - the number of time steps to average
+      horizon (int) - number of steps to predict
+      batch_size (int) - the batch size
+      test_split (float) - percentage of data that goes to test dataset. The remaining data goes to train dataset
+      shuffle_buffer(int) - buffer size to use for the shuffle method. If none, don't shuffle, if -1, use total length
+
+    Returns:
+      train and test prefetched & batched TF datasets containing time windows of window_size and labels of horizon size
+    """
+    # split series
+    split_idx = int((1-test_split) * len(series))
+    train_series = series[:split_idx]
+    test_series = series[split_idx:]
+
+    # Generate a TF Dataset from the series values
+    train_dataset = tf.data.Dataset.from_tensor_slices(train_series)
+    test_dataset = tf.data.Dataset.from_tensor_slices(test_series)
+
+    # Window the data but only take those with the specified size
+    train_dataset = train_dataset.window(window_size + horizon, shift=1, drop_remainder=True)
+    test_dataset = test_dataset.window(window_size + horizon, shift=1, drop_remainder=True)
+
+    # Flatten the windows by putting its elements in a single batch
+    train_dataset = train_dataset.flat_map(lambda window: window.batch(window_size + horizon))
+    test_dataset = test_dataset.flat_map(lambda window: window.batch(window_size + horizon))
+
+    # Create tuples with features and labels
+    train_dataset = train_dataset.map(lambda window: (window[:-horizon], window[-horizon]))
+    test_dataset = test_dataset.map(lambda window: (window[:-horizon], window[-horizon]))
+
+    # Shuffle the windows
+    if shuffle_buffer is not None:
+        if shuffle_buffer == -1:
+            shuffle_buffer = len(train_series)
+
+        train_dataset = train_dataset.shuffle(shuffle_buffer)
+
+    # Create batches of windows
+    train_dataset = train_dataset.batch(batch_size).prefetch(tf.data.AUTOTUNE)
+    test_dataset = test_dataset.batch(batch_size).prefetch(tf.data.AUTOTUNE)
+
+    return train_dataset, test_dataset
